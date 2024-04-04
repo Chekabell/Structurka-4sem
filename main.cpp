@@ -1,145 +1,160 @@
 ﻿#include <iostream>
+#include <Windows.h>
 
-//Функция для заполнения массива вещественными значениями в порядке возрастания
-void Ordered(double* arr, int len) {
-	double tmp = 0;
-	for (int i = 0; i <= len; i++){
-		arr[i] = tmp;
-		tmp += 0.01;
-	}
+enum class Func { Ordered, OrderedBack, RandSeq, SawRand, SinRand, StairRand, QuaziRand, Last };
+
+struct time {
+	int intTime;
+	int doubleTime;
 };
+	
+struct time a;
 
-//Функция для заполнения массива целочисленными значениями в порядке возрастания
-void Ordered(int* arr, int len) {
-	int tmp = 0;
+//Функция для заполнения массива вещественными или целочисленными значениями в порядке возрастания
+template <typename T> void Ordered(T* arr, const int len, T step = 5) {
+	T tmp = 0;
 	for (int i = 0; i <= len; i++) {
 		arr[i] = tmp;
-		tmp++;
+		tmp += step;
 	}
 };
 
-//Функция для заполнения массива вещественными значениями в порядке убывания
-void OrderedBack(double* arr, int len) {
-	double tmp = len * 0.01;
+	//Функция для заполнения массива вещественными или целочисленными значениями в порядке убывания
+template <typename T> void OrderedBack(T* arr, const int len, T step = 5) {
+	T tmp = len;
 	for (int i = 0; i <= len; i++) {
 		arr[i] = tmp;
-		tmp -= 0.01;
+		tmp -= step;
 	}
 };
 
-//Функция для заполнения массива целочисленными значениями в порядке убывания
-void OrderedBack(int* arr, int len) {
-	int tmp = len;
-	for (int i = 0; i <= len; i++) {
-		arr[i] = tmp;
-		tmp--;
-	}
-};
-
-//Функция для заполнения массива случайными целочисленными значениями
-void RandSeq(int* arr, int len, int max) {
-	srand(time(0));
-	for (int i = 0; i < len; i++){
-		arr[i] = rand() % (max - 1);
-	}
-}
-
-//Функция для заполнения массива случайными вещественными значениями
-void RandSeq(double* arr, int len, double max) {
+//Функция для заполнения массива случайными вещественными или целочисленными значениями
+template <typename T> void RandSeq(T* arr, const int len, T max = 50) {
 	srand(time(0));
 	for (int i = 0; i < len; i++) {
 		arr[i] = (double)rand() / RAND_MAX * max;
 	}
-}
+};
 
 //Функция для заполнения массива целочисленными значениями в виде пилообразного распределения
-void SawRand(int* arr, int len, int interval, int min = 0, int max = 5) {
-	int tmp = min;
-	for (int i = 1; i <= len; i++) { 
-		arr[i-1] = tmp;
-		tmp += (max - min)/interval;
-		if (tmp >= max || i%interval == 1) {
+template <typename T> void SawRand(T* arr, const int len, int interval = 5, T min = 0, T max = 50) {
+	T tmp = min;
+	for (int i = 2; i <= len + 1; i++) {
+		arr[i - 2] = tmp;
+		tmp += (max - min) / interval;
+		if (tmp >= max || i % interval == 1) {
 			tmp = min;
 		}
 	}
-}
-
-//Функция для заполнения массива вещественными значениями в виде пилообразного распределения
-void SawRand(double* arr, int len, double max = 5) {
-	srand(time(0));
-	double min = 0.5, tmpmax = 1.2;
-	for (int i = 0; i < len; i++) {
-		arr[i] = min + (double)rand() / RAND_MAX * (tmpmax - min);
-		min++;
-		tmpmax++;
-		if (max <= min) min = 0.5, tmpmax = 1.2;
-	}
-}
+};
 
 //Функция для заполнения массива значениями в виде синусоидального распределения
-void SinRand(double* arr, int len, double range = 1) {
-	srand(time(0));
+template <typename T> void SinRand(T* arr, const int len, T range = 50) {
 	for (int i = 0; i < len; i++) arr[i] = sin(i) * range;
-}
-
-void SinRand(int* arr, int len, int range = 2) {
-	srand(time(0));
-	for (int i = 0; i < len; i++) arr[i] = sin(i) * (range+1);
-}
-
-//Функция для заполнения массива целочисленными значениями в виде пилообразного распределения
-void StairRand(int* arr, int len, int step = 1) {
-	srand(time(0));
-	int min = 0, max = 5;
-	for (int j = 0, i = 0; i < len; i++, j++) {
-		if (j >= step) {
-			j = 0;
-			min += 5;
-			max += 5;
-		}
-		arr[i] = min + rand() % (max - min + 1);
-	}
-}
-
-//Функция для заполнения массива вещественными значениями в виде ступенчатого распределения
-void StairRand(double* arr, int len, int step) {
-	srand(time(0));
-	double min = 0, max = 5;
-	for (int j = 0, i = 0; i < len; i++, j++) {
-		if (j >= step) {
-			j = 0;
-			min += 5;
-			max += 5;
-		}
-		arr[i] = min + (double)rand() / RAND_MAX * (max - min);
-	}
-}
+};
 
 //Функция для заполнения массива целочисленными значениями в виде ступенчатого распределения
-void QuaziRand(int* arr, int len, int min, int max) {
+template <typename T> void StairRand(T* arr, const int len, T interval = 5, T mincoleb = 0, T maxcoleb = 50) {
 	srand(time(0));
-	for (int i = 0; i < len; i++){
-		arr[i] = min + rand() % (max - min + 1);
-		min++;
-		max++;
+	T step = maxcoleb - mincoleb;
+	for (int i = 0, j = 0; i < len; i++, j++) {
+		if (j >= interval) {
+			j = 0;
+			mincoleb += step;
+			maxcoleb += step;
+		}
+		arr[i] = mincoleb + (double)rand() / RAND_MAX * (maxcoleb - mincoleb);
 	}
-}
+};
 
-//Функция для заполнения массива вещественными значениями в виде ступенчатого распределения
-void QuaziRand(double* arr, int len, double min, double max) {
+//Функция для заполнения массива целочисленными значениями в виде квазирандомного распределения
+template <typename T> void QuaziRand(T* arr, const int len, T min = 0, T max = 50, T step = 5) {
 	srand(time(0));
 	for (int i = 0; i < len; i++) {
 		arr[i] = min + (double)rand() / RAND_MAX * (max - min);
-		min++;
-		max++;
+		min += step;
+		max += step;
 	}
+};
+
+//Функция распределения для вызова функция по заполнению массивов данными
+void Decor(enum Func key, int* masInt, double* masDouble, const int len){
+	SYSTEMTIME st;
+	int tmpTimeInt = 0, tmpTimeDouble = 0;
+	GetLocalTime(&st);
+	tmpTimeInt = (st.wSecond * 1000) + st.wMilliseconds;
+	switch (key) {
+		case Func::Ordered:
+			Ordered<int>(masInt,len);
+			GetLocalTime(&st);
+			tmpTimeDouble = (st.wSecond * 1000) + st.wMilliseconds;
+			Ordered<double>(masDouble, len);
+			break;
+		case Func::OrderedBack:
+			OrderedBack<int>(masInt, len);
+			GetLocalTime(&st);
+			tmpTimeDouble = (st.wSecond * 1000) + st.wMilliseconds;
+			Ordered<double>(masDouble, len);
+			break;
+		case Func::RandSeq:
+			RandSeq<int>(masInt, len);
+			GetLocalTime(&st);
+			tmpTimeDouble = (st.wSecond * 1000) + st.wMilliseconds;
+			RandSeq<double>(masDouble, len);
+			break;
+		case Func::SawRand:
+			SawRand<int>(masInt, len);
+			GetLocalTime(&st);
+			tmpTimeDouble = (st.wSecond * 1000) + st.wMilliseconds;
+			SawRand<double>(masDouble, len);
+			break;
+		case Func::SinRand:
+			SinRand<int>(masInt, len);
+			GetLocalTime(&st);
+			tmpTimeDouble = (st.wSecond * 1000) + st.wMilliseconds;
+			SinRand<double>(masDouble, len);
+			break;
+		case Func::StairRand:
+			StairRand<int>(masInt, len);
+			GetLocalTime(&st);
+			tmpTimeDouble = (st.wSecond * 1000) + st.wMilliseconds;
+			StairRand<double>(masDouble, len);
+			break;
+		case Func::QuaziRand:
+			QuaziRand<int>(masInt, len);
+			GetLocalTime(&st);
+			tmpTimeDouble = (st.wSecond * 1000) + st.wMilliseconds;
+			QuaziRand<double>(masDouble, len);
+			break;
+	}
+	GetLocalTime(&st);
+	a.intTime = std::abs(tmpTimeDouble - tmpTimeInt);
+	a.doubleTime = std::abs((st.wSecond * 1000) + st.wMilliseconds - tmpTimeDouble);
 }
 
+
 int main(void) {
-	const int len = 20;
-	int massive[len];
-	SawRand(massive, len, 6);
+	const int len = 100;
+	auto* massiveDouble = new double[len];
+	auto* massiveInt = new int[len];
+	Decor(Func::Ordered,massiveInt,massiveDouble,len);
+	std::cout << "Ordered Int = " << a.intTime << "\nOrdered Double = " << a.doubleTime << std::endl;
+	Decor(Func::OrderedBack, massiveInt, massiveDouble, len);
+	std::cout << "OrderedBack Int = " << a.intTime << "\nOrderedBack Double = " << a.doubleTime << std::endl;
+	Decor(Func::RandSeq, massiveInt, massiveDouble, len);
+	std::cout << "RandSeq Int = " << a.intTime << "\nRandSeq Double = " << a.doubleTime << std::endl;
+	Decor(Func::SawRand, massiveInt, massiveDouble, len);
+	std::cout << "SawRand Int = " << a.intTime << "\nSawRand Double = " << a.doubleTime << std::endl;
+	Decor(Func::SinRand, massiveInt, massiveDouble, len);
+	std::cout << "SinRand Int = " << a.intTime << "\nSinRand Double = " << a.doubleTime << std::endl;
+	Decor(Func::StairRand, massiveInt, massiveDouble, len);
+	std::cout << "StairRand Int = " << a.intTime << "\nStairRand Double = " << a.doubleTime << std::endl;
+	Decor(Func::QuaziRand, massiveInt, massiveDouble, len);
+	std::cout << "QuaziRand Int = " << a.intTime << "\nQuaziRand Double = " << a.doubleTime << std::endl;
+
+	/*QuaziRand<double>(massiveDouble, len);
 	for (int i = 0; i < len; i++) {
-		std::cout << massive[i] << std::endl;
-	}
+		std::cout << massiveDouble[i] << (i%9!=0 || i==0 ? " ":"\n");
+	}*/
+	return 0;
 }
