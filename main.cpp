@@ -1,8 +1,9 @@
 ﻿#include <iostream>
 #include <unordered_map>
+#include <math.h>
 
 //Функция для заполнения массива вещественными или целочисленными значениями в порядке возрастания
-void Ordered(int* arr, const int len, int step = 5) {
+void ordered(int* arr, const int len, int step = 5) {
 	int tmp = 0;
 	for (int i = 0; i <= len; i++) {
 		arr[i] = tmp;
@@ -20,7 +21,7 @@ void orderedBack(int* arr, const int len, int step = 5) {
 };
 
 //Функция для заполнения массива случайными вещественными или целочисленными значениями
-void RandSeq(int* arr, const int len, int max = 50) {
+void randSeq(int* arr, const int len, int max = 10) {
 	srand(time(0));
 	for (int i = 0; i < len; i++) {
 		arr[i] = rand()%max;
@@ -61,8 +62,109 @@ void bubbleSortMod(int* arr, int n){
 	}
 }
 
-// A utility function to get the digit
-// at index d in a integer
+
+void merge(int array[], int const left, int const mid, int const right){
+    int const subArrayOne = mid - left + 1;
+    int const subArrayTwo = right - mid;
+
+    // Create temp arrays
+    int* leftArray = new int[subArrayOne],
+        * rightArray = new int[subArrayTwo];
+
+    // Copy data to temp arrays leftArray[] 
+    // and rightArray[]
+    for (int i = 0; i < subArrayOne; i++)
+        leftArray[i] = array[left + i];
+    for (int j = 0; j < subArrayTwo; j++)
+        rightArray[j] = array[mid + 1 + j];
+
+    // Initial index of first sub-array
+    // Initial index of second sub-array
+    int indexOfSubArrayOne = 0,
+        indexOfSubArrayTwo = 0;
+
+    // Initial index of merged array
+    int indexOfMergedArray = left;
+
+    // Merge the temp arrays back into 
+    // array[left..right]
+    while (indexOfSubArrayOne < subArrayOne &&
+        indexOfSubArrayTwo < subArrayTwo)
+    {
+        if (leftArray[indexOfSubArrayOne] <=
+            rightArray[indexOfSubArrayTwo])
+        {
+            array[indexOfMergedArray] =
+                leftArray[indexOfSubArrayOne];
+            indexOfSubArrayOne++;
+        }
+        else
+        {
+            array[indexOfMergedArray] =
+                rightArray[indexOfSubArrayTwo];
+            indexOfSubArrayTwo++;
+        }
+        indexOfMergedArray++;
+    }
+
+    // Copy the remaining elements of
+    // left[], if there are any
+    while (indexOfSubArrayOne < subArrayOne)
+    {
+        array[indexOfMergedArray] =
+            leftArray[indexOfSubArrayOne];
+        indexOfSubArrayOne++;
+        indexOfMergedArray++;
+    }
+
+    // Copy the remaining elements of
+    // right[], if there are any
+    while (indexOfSubArrayTwo < subArrayTwo)
+    {
+        array[indexOfMergedArray] =
+            rightArray[indexOfSubArrayTwo];
+        indexOfSubArrayTwo++;
+        indexOfMergedArray++;
+    }
+}
+
+// begin is for left index and end is
+// right index of the sub-array
+// of arr to be sorted */
+void mergeSort(int array[], int const begin, int const end){   
+    // Returns recursively
+    if (begin >= end)
+        return;
+
+    int mid = begin + (end - begin) / 2;
+    mergeSort(array, begin, mid);
+    mergeSort(array, mid + 1, end);
+    merge(array, begin, mid, end);
+}
+
+void printArray(int* array, const int len) {
+    for (int i = 1; i <= len; i++) {
+        std::cout << array[i-1] << " ";
+        if (i % 10 == 0) {
+            std::cout << std::endl;
+        }
+    }
+    std::cout << std::endl;
+}
+
+void sortInsertion(int* arr, int len)
+{
+    int i, j;
+    int V;
+    for (i = 1; i < len; i++)
+    {
+        V = arr[i];
+        for (j = i; j > 0 && arr[j - 1] > V; j--)
+            arr[j] = arr[j - 1];
+        arr[j] = V;
+    }
+}
+
 int digit_at(int x, int d)
 {
     return (int)(x / pow(10, d - 1)) % 10;
@@ -72,7 +174,10 @@ int digit_at(int x, int d)
 // MSD Radix Sort recursively
 void MSD_sort(int* arr, int lo, int hi, int d)
 {
-
+    if (d <= 2) {
+        sortInsertion(arr, hi+1);
+        return;
+    }
     // recursion break condition
     if (hi <= lo) {
         return;
@@ -91,7 +196,7 @@ void MSD_sort(int* arr, int lo, int hi, int d)
     }
 
     // Change count[] so that count[] now contains actual
-    //  position of this digits in temp[]
+    // position of this digits in temp[]
     for (int r = 0; r < 10 + 1; r++)
         count[r + 1] += count[r];
 
@@ -124,18 +229,39 @@ int getMax(int arr[], int n)
 }
 
 // Main function to call MSD_sort
-void radixsort(int* arr, int n)
+void radixsort(int* arr, int len)
 {
     // Find the maximum number to know number of digits
-    int m = getMax(arr, n);
+    int m = getMax(arr, len);
 
     // get the length of the largest integer
     int d = floor(log10(abs(m))) + 1;
 
     // function call
-    MSD_sort(arr, 0, n - 1, d);
+    MSD_sort(arr, 0, len - 1, d);
 }
 
-int main(void) {
+bool verifyArray(int* arr, int len) {
+    for (int i = 0; i < len-1; i++) {
+        if (arr[i] > arr[i + 1]) {
+            std::cout << arr[i] << " " << arr[i + 1] << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
 
+
+int main(void)
+{
+    const int len = 500000;
+    int *arr = new int[len];
+    for (int i = 1; i <= 10; i++) {
+        randSeq(arr, len);
+        radixsort(arr, len);
+        verifyArray(arr, len);
+        std::cout << i << ": check" << std::endl;
+    }
+
+    return 0;
 }
