@@ -1,141 +1,78 @@
 ﻿#include <iostream>
-#include <unordered_map>
 
-//Функция для заполнения массива вещественными или целочисленными значениями в порядке возрастания
-void Ordered(int* arr, const int len, int step = 5) {
-	int tmp = 0;
-	for (int i = 0; i <= len; i++) {
-		arr[i] = tmp;
-		tmp += step;
-	}
-};
-
-//Функция для заполнения массива вещественными или целочисленными значениями в порядке убывания
-void orderedBack(int* arr, const int len, int step = 5) {
-	int tmp = len;
-	for (int i = 0; i <= len; i++) {
-		arr[i] = tmp;
-		tmp -= step;
-	}
-};
-
-//Функция для заполнения массива случайными вещественными или целочисленными значениями
-void RandSeq(int* arr, const int len, int max = 50) {
-	srand(time(0));
-	for (int i = 0; i < len; i++) {
-		arr[i] = rand()%max;
-	}
-};
-
-//Функция для заполнения массива целочисленными значениями в виде ступенчатого распределения
-void stairRand(int* arr, const int len, int interval = 5, int mincoleb = 0, int maxcoleb = 50) {
-	srand(time(0));
-	int step = maxcoleb - mincoleb;
-	for (int i = 0, j = 0; i < len; i++, j++) {
-		if (j >= interval) {
-			j = 0;
-			mincoleb += step;
-			maxcoleb += step;
-		}
-		arr[i] = mincoleb + rand() % (maxcoleb - mincoleb +1);
-	}
-};
-
-void swap(int* a, int* b) {
-	int tmp = *a;
-	*a = *b;
-	*b = tmp;
+int* genArray(const int len) {
+	int* array = new int[len];
+	for (int i = 0; i < len; i++) array[i] = i;
+	return array;
 }
 
-void bubbleSortMod(int* arr, int n){
-	int i, j;
-	int index;
-	for (i = 0; i < n - 1; i++) {
-		index = 0;
-		for (j = index; j < n - i - 1; j++) {
-			if (arr[j] > arr[j + 1]) {
-				swap(&arr[j], &arr[j + 1]);
-				index = j + 1;
+int searchSequential(int* array, const int len, const int searchingNumber, const int begin = 0) {
+	if (array && len > 0) {
+		for (int i = begin; i < len; i++) {
+			if (array[i] == searchingNumber) {
+				return array[i];
 			}
 		}
 	}
+	return 0;
 }
 
-// A utility function to get the digit
-// at index d in a integer
-int digit_at(int x, int d)
-{
-    return (int)(x / pow(10, d - 1)) % 10;
+int searchJumpLVL1(int* array, const int len, const int searchingNumber) {
+	int i = sqrt(len);
+	while (array[i] < searchingNumber)
+		i += sqrt(len);
+	return searchSequential(array, i, searchingNumber);
 }
 
-// The main function to sort array using
-// MSD Radix Sort recursively
-void MSD_sort(int* arr, int lo, int hi, int d)
-{
-
-    // recursion break condition
-    if (hi <= lo) {
-        return;
-    }
-
-    int count[10 + 2] = { 0 };
-
-    // temp is created to easily swap strings in arr[]
-    std::unordered_map<int, int> temp;
-
-    // Store occurrences of most significant character
-    // from each integer in count[]
-    for (int i = lo; i <= hi; i++) {
-        int c = digit_at(arr[i], d);
-        count[c + 2]++;
-    }
-
-    // Change count[] so that count[] now contains actual
-    //  position of this digits in temp[]
-    for (int r = 0; r < 10 + 1; r++)
-        count[r + 1] += count[r];
-
-    // Build the temp
-    for (int i = lo; i <= hi; i++) {
-        int c = digit_at(arr[i], d);
-        temp[count[c + 1]++] = arr[i];
-    }
-
-    // Copy all integers of temp to arr[], so that arr[] now
-    // contains partially sorted integers
-    for (int i = lo; i <= hi; i++)
-        arr[i] = temp[i - lo];
-
-    // Recursively MSD_sort() on each partially sorted
-    // integers set to sort them by their next digit
-    for (int r = 0; r < 10; r++)
-        MSD_sort(arr, lo + count[r], lo + count[r + 1] - 1,
-            d - 1);
+int searchJumpLVL2(int* array, const int len, const int searchingNumber) {
+	int i = sqrt(len);
+	while (array[i] < searchingNumber)
+		i += sqrt(len);
+	while (array[i] > searchingNumber)
+		i -= sqrt(len);
+	return searchSequential(array, len, searchingNumber, i);
 }
 
-// function find the largest integer
-int getMax(int arr[], int n)
-{
-    int mx = arr[0];
-    for (int i = 1; i < n; i++)
-        if (arr[i] > mx)
-            mx = arr[i];
-    return mx;
+int searchBinary(int* array,const int begin, const int end, const int searchingNumber) {
+	int mid = end + begin / 2;
+	if (array[mid] < searchingNumber)
+		return searchBinary(array, mid+1, end, searchingNumber);
+	else if (array[mid] > searchingNumber)
+		return searchBinary(array, begin, mid-1,searchingNumber);
+	return array[mid];
 }
 
-// Main function to call MSD_sort
-void radixsort(int* arr, int n)
-{
-    // Find the maximum number to know number of digits
-    int m = getMax(arr, n);
+int searchBinary(int* array, const int len, const int searchingNumber) {
+	return searchBinary(array, 0, len-1, searchingNumber);
+}
 
-    // get the length of the largest integer
-    int d = floor(log10(abs(m))) + 1;
+int searchInterpolation(int* array, const int left, const int right, const int searchingNumber) {
+	int index = (searchingNumber - array[left]) * (left - right) / (array[left] - array[right]) + left;
+	if (array[index] < searchingNumber)
+		return searchBinary(array, index+1, right, searchingNumber);
+	else if (array[index] > searchingNumber)
+		return searchBinary(array, left, index-1, searchingNumber);
+	return array[index];
+}
 
-    // function call
-    MSD_sort(arr, 0, n - 1, d);
+int searchInterpolation(int* array, const int len, const int searchingNumber) {
+	return searchInterpolation(array, 0, len - 1, searchingNumber);
+}
+
+void checkSearchFunction(int funcSearch(int*,const int,const int)) {
+	const int len = 1000;
+	int searchingNumber = 254;
+	int* array = genArray(len);
+	if (funcSearch(array, len, searchingNumber) == searchingNumber) {
+		std::cout << "Search is work!" << std::endl;
+	}
+	else std::cout << "FAILED" << std::endl;
 }
 
 int main(void) {
-
+	checkSearchFunction(searchBinary);
+	checkSearchFunction(searchJumpLVL1);
+	checkSearchFunction(searchJumpLVL2);
+	checkSearchFunction(searchInterpolation);
+	return 0;
 }
