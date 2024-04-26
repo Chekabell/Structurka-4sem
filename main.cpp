@@ -4,48 +4,59 @@ int globalCount = 0;
 
 int* genArray(const int len) {
 	int* array = new int[len];
-	for (int i = 1; i < len; i++) array[i] = i;
+	int number = 1;
+	for (int i = 0; i < len; i++) {
+		array[i] = number;
+		number += 2;
+	}
 	return array;
 }
 
-int searchSequential(int* array, const int begin, const int end, const int searchingNumber) {
-	for (int i = begin; i <= end; i++) {
-		if (globalCount++, array[i] == searchingNumber) {
-			return array[i];
-		}
+int searchJumpLVL1(int* array, const int len, const int searchingNumber) {
+	const int jump = sqrt(len);
+	int stepLeft = 0;
+	int stepRight = jump;
+	while (globalCount++, array[std::min(stepRight, len) - 1] < searchingNumber) {
+		stepLeft = stepRight;
+		stepRight += jump;
+		if (stepLeft >= len) return 0;
 	}
+	while (globalCount++, array[stepLeft] < searchingNumber) {
+		stepLeft++;
+		if (stepLeft >= std::min(stepRight, len)) return 0;
+	}
+
+	if (globalCount++, array[stepLeft] == searchingNumber) return array[stepLeft];
 	return 0;
 }
 
-int searchJumpLVL1(int* array, const int len, const int searchingNumber) {
-	int jump = sqrt(len);
-	int stepLeft = 0;
-	int stepRight = jump;
-	while (globalCount++, array[stepRight] < searchingNumber) {
-		stepLeft = stepRight;
-		stepRight += jump;
-		if (stepRight > len) return 0;
-	}
-	return searchSequential(array, stepLeft, stepRight, searchingNumber);
-}
-
 int searchJumpLVL2(int* array, const int len, const int searchingNumber) {
-	int jump = sqrt(len);
+	const int jump = sqrt(len);
+	const int jump2 = sqrt(jump);
 	int stepLeft = 0;
 	int stepRight = jump;
-	int fixStepRight;
-	while (globalCount++, array[stepRight] < searchingNumber) {
+
+	while (globalCount++, array[std::min(stepRight, len) - 1] < searchingNumber) {
 		stepLeft = stepRight;
 		stepRight += jump;
-		if (stepRight > len) return 0;
+		if (stepLeft >= len) return 0;
 	}
-	fixStepRight = stepRight;
-	while (globalCount++, array[stepLeft] > searchingNumber) {
-		stepRight = stepLeft;
-		stepLeft -= jump;
-		if (stepLeft < 0) return 0;
+
+	int len2 = stepRight;
+	stepRight = stepLeft + jump2;
+
+	while (globalCount++, array[std::min(stepRight, len2) - 1] < searchingNumber) {
+		stepLeft = stepRight;
+		stepRight += jump2;
+		if (stepLeft >= len) return 0;
 	}
-	return searchSequential(array, stepLeft, fixStepRight, searchingNumber);
+	while (globalCount++, array[stepLeft] < searchingNumber) {
+		stepLeft++;
+		if (stepLeft >= std::min(stepRight, len2)) return 0;
+	}
+
+	if (globalCount++, array[stepLeft] == searchingNumber) return array[stepLeft];
+	return 0;
 }
 
 int searchBinary(int* array, int begin, int end, const int searchingNumber) {
@@ -53,7 +64,7 @@ int searchBinary(int* array, int begin, int end, const int searchingNumber) {
 	while (begin <= end) {
 		mid = begin + (end - begin) / 2;
 		if (globalCount++, array[mid] == searchingNumber) return array[mid];
-		else if (globalCount++, array[mid] > searchingNumber) end = mid - 1;
+		if (globalCount++, array[mid] > searchingNumber) end = mid - 1;
 		else begin = mid + 1;
 	}
 	return 0;
@@ -66,7 +77,7 @@ int searchBinary(int* array, const int len, const int searchingNumber) {
 int searchInterpolation(int* array, int left, int right, const int searchingNumber) {
 	int index;
 	while (left <= right && (globalCount++, searchingNumber >= array[left]) && (globalCount++, searchingNumber <= array[right])) {
-		index = left + (((right - left) / (array[right] - array[left])) * (searchingNumber - array[left]));
+		index = left + (((double)(right - left) / (array[right] - array[left])) * (searchingNumber - array[left]));
 		if (globalCount++, array[index] == searchingNumber) return array[index];
 		if (globalCount++, array[index] > searchingNumber) right = index - 1;
 		else left = index + 1;
@@ -78,70 +89,95 @@ int searchInterpolation(int* array, const int len, const int searchingNumber) {
 	return searchInterpolation(array, 0, len - 1, searchingNumber);
 }
 
+int genUnevenNumber(int len) {
+	int number = rand() % (len-2);
+	if (number % 2 == 0) number++;
+	return number;
+}
+
+int genEvenNumber(int len) {
+	int number = rand() % (len-2);
+	if (number % 2 != 0) number++;
+	return number;
+}
+
 void checkSearchFunction(int funcSearch(int*, const int, const int), const int step) {
 	int maxLen = step * 10;
 	for (int nowLen = step; nowLen <= maxLen; nowLen += step) {
-		int j = 0;
-		int searchingNumberExist = rand() % nowLen;
-		int searchingNumberNotExist = -1;
-		globalCount = 0;
-		j = 0;
+		int searchingNumberExist;
 		int* array = genArray(nowLen);
+		int j = 0;
+		globalCount = 0;
 		std::cout << "LEN ARRAY: " << nowLen << std::endl;
-		while (j < 10) {
-			if (funcSearch(array, nowLen, (searchingNumberExist*(j+1))) == searchingNumberExist * (j + 1)) j++;
+		while (j < 1000) {
+			searchingNumberExist = genUnevenNumber(nowLen);
+			if (funcSearch(array, nowLen, searchingNumberExist) == searchingNumberExist) j++;
 			else {
 				std::cout << "FAIL" << std::endl;
 				return;
 			}
 		}
-		std::cout << "Existing  - " << globalCount/j << std::endl;
+		std::cout << "Existing - " << globalCount/j << std::endl;
 		globalCount = 0;
-		if (funcSearch(array, nowLen, searchingNumberNotExist)){
-			std::cout << "FAIL" << std::endl;
-			return;
+		j = 0;
+		while (j < 1000) {
+			if (funcSearch(array, nowLen, genEvenNumber(nowLen))) {
+				std::cout << "FAIL" << std::endl;
+				return;
+			}
+			else j++;
 		}
-		std::cout << "NOT existing  - " << globalCount << std::endl;
+		std::cout << "NOT existing - " << globalCount/j << std::endl;
 	}
 }
 
 int searchJumpForResearch(int *array, const int len, const int searchingNumber, const int jump) {
 	int stepLeft = 0;
 	int stepRight = jump;
-	while (globalCount++, array[stepRight] < searchingNumber) {
+
+	while (globalCount++, array[std::min(stepRight,len)-1] < searchingNumber) {
 		stepLeft = stepRight;
 		stepRight += jump;
-		if (stepRight > len) return 0;
+		if (stepLeft >= len) return 0;
 	}
-	return searchSequential(array, stepLeft, stepRight, searchingNumber);
+
+	while (globalCount++, array[stepLeft] < searchingNumber) {
+		stepLeft++;
+		if (stepLeft >= std::min(stepRight,len)) return 0;
+	}
+	
+	if (globalCount++, array[stepLeft] == searchingNumber) return array[stepLeft];
+	return 0;
 }
 
 void researchJump(const int step) {
 	int maxLen = step * 5;
 	int stepJump;
 	for (int nowLen = step; nowLen <= maxLen; nowLen += step) {
-		int searchingNumber = rand() % nowLen;
 		int* array = genArray(nowLen);
-		globalCount = 0;
 		stepJump = 1;
-		std::cout << "LEN ARRAY:" << nowLen << std::endl;
+		std::cout << "LEN ARRAY:" << nowLen << "sqrt = "<< sqrt(nowLen) << std::endl;
 		while (stepJump <= nowLen / 2) {
-			if (searchJumpForResearch(array, nowLen, searchingNumber, stepJump) == searchingNumber) {
-				std::cout << /*stepJump << ": "<<*//*"Step Jump:: "<< stepJump << " Comparisons: " <<*/ globalCount << std::endl;
-				stepJump++;
+			int it;
+			globalCount = 0;
+			for (it = 1; it <= 100; it++) {
+				int searchingNumber = genUnevenNumber(nowLen);
+				if (searchJumpForResearch(array, nowLen, searchingNumber, stepJump) != searchingNumber) {
+					std::cout << "WTF " << searchingNumber << " WTF" << std::endl;
+					std::cout << "FAIL" << std::endl;
+					return;
+				}
 			}
-			else {
-				std::cout << "FAIL" << std::endl;
-				return;
-			}
+			std::cout << globalCount / it << std::endl;
+			stepJump++;
 		}
 	}
 }
 
 int main(void) {
 	srand(time(NULL));
-	int step = 100;
-	/*std::cout << "=======BINARY=======" << std::endl;
+	int step = 10000000;
+	std::cout << "=======BINARY=======" << std::endl;
 	checkSearchFunction(searchBinary,step);
 	std::cout << "====================" << std::endl;
 	std::cout << "====INTERPOLATION====" << std::endl;
@@ -152,8 +188,13 @@ int main(void) {
 	std::cout << "====================" << std::endl;
 	std::cout << "======JUMPLVL2======" << std::endl;
 	checkSearchFunction(searchJumpLVL2, step);
-	std::cout << "====================" << std::endl;*/
-	researchJump(step);
+	std::cout << "====================" << std::endl;
+
+	/*for (int i = 0; i <= 100; i++) {
+		std::cout << genEvenNumber(step) << std::endl;
+	}*/
+	/*researchJump(step);*/
+
 	/*int* array = genArray(1000);
 	std::cout << array[5] << std::endl;
 	std::cout << searchBinary(array, 1000, 5) << std::endl;*/
