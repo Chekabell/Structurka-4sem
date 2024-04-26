@@ -63,8 +63,7 @@ void swap(int* a, int* b) {
 }
 
 // function find the largest integer
-int getMax(int* arr, int n)
-{
+int getMax(int* arr, int n){
     int mx = arr[0];
     for (int i = 1; i < n; i++)
         if (arr[i] > mx)
@@ -141,6 +140,7 @@ void radixSort(int* arr, int len)
     // function call
     msdSort(arr, 0, len - 1, d);
 }
+
 //Function merge two massive
 void merge(int* array, int const left, int const mid, int const right){
     int const subArrayOne = mid - left + 1;
@@ -303,6 +303,15 @@ void estimateComplexityQSort(int len) {
         std::chrono::duration<double, std::milli> time = end - start;
         std::cout << method[i] << " T(n) = " << time.count() << " S(n) = " << globalSn << std::endl;
         i++;
+    }
+}
+
+void printArray(int* array, const int len) {
+    for (int i = 1; i <= len; i++) {
+        std::cout << array[i-1] << " ";
+        if (i % 10 == 0) {
+            std::cout << std::endl;
+        }
     }
 }
 
