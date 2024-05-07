@@ -69,13 +69,13 @@ pNode remove(pNode node, Item key) {
 	}
 }
 
-pNode insertRoot(pNode node,Item key) {
-	pNode newNode = createNode(key);
-	if (!node) return newNode;
-	if (key > node->key) newNode->left = node;
-	else newNode->right = node;
-	return newNode;
-}
+//pNode insertRoot(pNode node,Item key) {
+//	pNode newNode = createNode(key);
+//	if (!node) return newNode;
+//	if (key > node->key) newNode->left = node;
+//	else newNode->right = node;
+//	return newNode;
+//}
 
 void printTree(pNode node) {
 	if (!node) return;
