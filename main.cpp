@@ -2,7 +2,7 @@
 
 typedef struct Node* pNode;
 typedef void(*pFunction)(pNode);
-typedef int Item;
+typedef char Item;
 struct Node {
 	pNode left;
 	pNode right;
@@ -69,13 +69,46 @@ pNode remove(pNode node, Item key) {
 	}
 }
 
-//pNode insertRoot(pNode node,Item key) {
-//	pNode newNode = createNode(key);
-//	if (!node) return newNode;
-//	if (key > node->key) newNode->left = node;
-//	else newNode->right = node;
-//	return newNode;
-//}
+void swap(pNode a, pNode b) {
+	int a_key = a->key;
+	a->key = b->key;
+	b->key = a_key;
+}
+
+void rotateRight(pNode node) {
+	swap(node, node->left);
+	pNode buffer = node->right;
+	node->right = node->left;
+	node->left = node->right->left;
+	node->right->left = node->right->right;
+	node->right->right = buffer;
+}
+
+void rotateLeft(pNode node) {
+	swap(node, node->right);
+	pNode buffer = node->left;
+	node->left = node->right;
+	node->right = node->left->right;
+	node->left->right = node->left->left;
+	node->left->left = buffer;
+}
+
+
+pNode insertRoot(pNode node,Item key) {
+	if (!node) {
+		node = createNode(key);
+		return node;
+	}
+	else
+		if (key < node->key) {
+			insertRoot(node->left, key);
+			rotateRight(node);
+		}
+		else {
+			insertRoot(node->left, key);
+			rotateLeft(node);
+		}
+}
 
 void printTree(pNode node) {
 	if (!node) return;
@@ -94,24 +127,30 @@ int size(pNode node) {
 	return 1 + size(node->left) + size(node->right);
 }
 
-int main(void) {
-	srand(time(NULL));
-	pNode root = createNode(1);
-	int key = 0;
 
-	std::cout << "R : " << 1 << std::endl;
+
+int main(void) {
+	const char* ALPHABET[] = { "й","ц","у","к","е","н","г","ш","щ","з","х","ъ","ф","ы","в",
+	"а","п","р","о","л","д","ж","э","я","ч","с","м","и","т","ь","б","ю" };
+
+	setlocale(LC_ALL, "russian");
+	srand(time(NULL));
+	pNode root = createNode(*ALPHABET[rand()%32]);
+
+	std::cout << "Root : " << root->key << std::endl;
 	for (int i = 0; i < 5; i++) {
-		key = rand() % 10;
+		char key = *ALPHABET[rand() % 32];
 		insert(root, key);
 		std::cout << i+1 << " : " << key << std::endl;
 	}
+
 	printTree(root);
-	std::cout << std::endl << "H : " << height(root) << std::endl;
-	std::cout << "S : " << size(root) << std::endl;
-	std::cout << remove(root, 1) << std::endl;
+	std::cout << std::endl << "High : " << height(root) << std::endl;
+	std::cout << "Size : " << size(root) << std::endl;
+
 	printTree(root);
-	std::cout << std::endl << "H : " << height(root) << std::endl;
-	std::cout << "S : " << size(root) << std::endl;
+	std::cout << std::endl << "High : " << height(root) << std::endl;
+	std::cout << "Size : " << size(root) << std::endl;
 
 	return 0;
 }
