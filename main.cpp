@@ -1,5 +1,4 @@
-﻿#pragma once
-#include <iostream>
+﻿#include <iostream>
 
 typedef Node* pNode;
 typedef int Item;
@@ -20,6 +19,9 @@ struct Node {
 	bool nodeExist(pNode node) {
 		return (node != nul) ? true : false;
 	}
+	static int height(pNode node) {
+		return height(node->left) + height(node->right) + 1;
+	}
 };
 
 pNode nul = new Node(0);
@@ -39,6 +41,9 @@ public:
 	int getSize() {
 		return size;
 	};
+	int getHeight() {
+		return Node::height(root);
+	}
 	bool insert(Item key) {
 		pNode curr = root;
 		pNode parent = nul;
@@ -256,6 +261,43 @@ protected:
 	}
 };
 
+
+pNode genTree(pNode functionInsert(pNode, Item), const int length, bool mode) {
+	pNode root = nullptr;
+	if (length > 0)
+		for (int i = 0; i < length; i++)
+			root = functionInsert(root, mode ? i : rand() % length);
+	return root;
+}
+
+void checkHeight(pNode functionGen(pNode, Item), const int step) {
+	pNode root = nullptr;
+	const int maxLen = step * 10;
+	int iters;
+	int summ;
+	std::cout << "--RANDOM KEY--" << std::endl;
+	for (int i = step; i <= maxLen; i += step) {
+		iters = 0;
+		summ = 0;
+		while (iters < 10) {
+			root = genTree(functionGen, i, false);
+			summ += height(root);
+			iters++;
+		}
+		std::cout << "Size tree: " << i << " Height: " << summ / iters << std::endl;
+	}
+	std::cout << "--ORDERED KEY--" << std::endl;
+	for (int i = step; i <= maxLen; i += step) {
+		iters = 0;
+		summ = 0;
+		while (iters < 10) {
+			root = genTree(functionGen, i, true);
+			summ += height(root);
+			iters++;
+		}
+		std::cout << "Size tree: " << i << " Height: " << summ / iters << std::endl;
+	}
+}
 
 int main(void) {
 
