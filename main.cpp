@@ -1,6 +1,7 @@
 ﻿#include <iostream>
+#include <set>
 
-typedef Node* pNode;
+typedef struct Node* pNode;
 typedef int Item;
 
 struct Node {
@@ -9,22 +10,30 @@ struct Node {
 	pNode right;
 	pNode parent;
 	bool color;
-	Node(Item k) {
+	Node(Item k, bool col = true) {
 		key = k;
-		color = false;
+		color = col;
 		parent = nullptr;
 		left = nullptr;
 		right = nullptr;
 	};
-	bool nodeExist(pNode node) {
-		return (node != nul) ? true : false;
-	}
-	static int height(pNode node) {
-		return height(node->left) + height(node->right) + 1;
-	}
 };
 
-pNode nul = new Node(0);
+pNode nul = new Node(0,false);
+
+bool nodeExist(pNode node) {
+	return (node != nul) ? true : false;
+}
+int height(pNode node) {
+	if (node == nul) return 0;
+	return std::max(height(node->left), height(node->right)) + 1;
+}
+
+pNode getMin(pNode node) {
+	if (!node) return nullptr;
+	if (!node->left) return node;
+	return getMin(node->left);
+}
 
 class RBTree {
 private:
@@ -38,21 +47,24 @@ public:
 	~RBTree() {
 		clear();
 	}
+	pNode getRoot() {
+		return root;
+	};
 	int getSize() {
 		return size;
 	};
 	int getHeight() {
-		return Node::height(root);
+		return height(root);
 	}
 	bool insert(Item key) {
 		pNode curr = root;
 		pNode parent = nul;
-		while (curr->nodeExist()) {
+		while (nodeExist(curr)) {
 			if (curr->key == key) {
 				return false;
 			}
 			parent = curr;
-			if ((*curr) > key) curr = curr->left;
+			if (curr->key > key) curr = curr->left;
 			else curr = curr->right;
 		}
 		pNode newNode = new Node(key);
@@ -62,7 +74,7 @@ public:
 		if (parent == nul) {
 			root = newNode;
 		}
-		else if ((*parent) > key) parent->left = newNode;
+		else if (parent->key > key) parent->left = newNode;
 		else parent->right = newNode;
 		_balanceInsert(newNode);
 		size++;
@@ -78,9 +90,8 @@ public:
 			delete nodeToDelete;
 		}
 		else {
-			pNode minNode = tnode<Type>::getMin(nodeToDelete->right);
+			pNode minNode = getMin(nodeToDelete->right);
 			nodeToDelete->key = minNode->key;
-			nodeToDelete->data = minNode->data;
 			removedNodeColor = minNode->color;
 			child = _getChildOrMock(minNode);
 			_transplantNode(minNode, child);
@@ -98,13 +109,19 @@ public:
 	};
 	pNode search(Item key) {
 		pNode curr = root;
-		while (curr != nul && (*curr) != key) {
-			if ((*curr) > key)
+		while (curr != nul && curr->key != key) {
+			if (curr->key > key)
 				curr = curr->left;
 			else
 				curr = curr->right;
 		}
 		return curr;
+	};
+	void printTree(pNode node) {
+		if (node == nul) return;
+		printTree(node->left);
+		std::cout << node->key << std::endl;
+		printTree(node->right);
 	};
 protected:
 	void _clearTree(pNode node) {
@@ -159,15 +176,15 @@ protected:
 	};
 	int _getChildrenCount(pNode node) {
 		int count = 0;
-		if (node->left->nodeExist())count += 1;
-		if (node->right->nodeExist())count += 1;
+		if (nodeExist(node->left))count += 1;
+		if (nodeExist(node->right))count += 1;
 		return count;
 	};
 	pNode _getChildOrMock(pNode node) {
-		return node->left->nodeExist() ? node->left : node->right;
+		return nodeExist(node->left) ? node->left : node->right;
 	};
 	bool _chekTree() {
-		return root->nodeExist() ? true : false;
+		return nodeExist(root) ? true : false;
 	};
 	void _fixAfterRemoval(pNode node) {
 		while (node != root && !node->color) {
@@ -261,38 +278,47 @@ protected:
 	}
 };
 
-
-pNode genTree(pNode functionInsert(pNode, Item), const int length, bool mode) {
-	pNode root = nullptr;
-	if (length > 0)
-		for (int i = 0; i < length; i++)
-			root = functionInsert(root, mode ? i : rand() % length);
+RBTree* genTree(const int length, const bool mode) {
+	RBTree* root = new RBTree;
+	if (length > 0) {
+		if (!mode) {
+			std::set<int> tmp;
+			while (tmp.size() <= length)
+				tmp.insert(rand());
+			auto iterEnd = tmp.cend();
+			for (auto iterBegin = tmp.begin(); iterBegin != iterEnd; iterBegin++) {
+				root->insert(*iterBegin);
+			}
+		}
+		else
+			for (int i = 0; i < length; i++)
+				root->insert(i);
+	}
 	return root;
 }
 
-void checkHeight(pNode functionGen(pNode, Item), const int step) {
-	pNode root = nullptr;
+
+
+
+void checkHeight(const int step) {
+	RBTree* tree;
 	const int maxLen = step * 10;
 	int iters;
 	int summ;
 	std::cout << "--RANDOM KEY--" << std::endl;
 	for (int i = step; i <= maxLen; i += step) {
-		iters = 0;
-		summ = 0;
-		while (iters < 10) {
-			root = genTree(functionGen, i, false);
-			summ += height(root);
-			iters++;
-		}
-		std::cout << "Size tree: " << i << " Height: " << summ / iters << std::endl;
+		tree = genTree(i, false);
+		summ = tree->getHeight();
+		delete tree;
+		std::cout << "Size tree: " << i << " Height: " << summ << std::endl;
 	}
 	std::cout << "--ORDERED KEY--" << std::endl;
 	for (int i = step; i <= maxLen; i += step) {
 		iters = 0;
 		summ = 0;
 		while (iters < 10) {
-			root = genTree(functionGen, i, true);
-			summ += height(root);
+			tree = genTree(i, true);
+			summ += tree->getHeight();
 			iters++;
 		}
 		std::cout << "Size tree: " << i << " Height: " << summ / iters << std::endl;
@@ -300,5 +326,8 @@ void checkHeight(pNode functionGen(pNode, Item), const int step) {
 }
 
 int main(void) {
+	//srand(time(NULL));
+	const int step = 1000;
+	checkHeight(step);
 
 }
