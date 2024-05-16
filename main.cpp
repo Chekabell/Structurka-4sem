@@ -2,7 +2,7 @@
 
 typedef struct Node* pNode;
 typedef void(*pFunction)(pNode);
-typedef int Item;
+typedef char Item;
 const char* ALPHABET[] = { "й", "ц", "у", "к", "е", "н", "г", "ш", "щ", "з", "х", "ъ", "ф", "ы", "в",
 	"а", "п", "р", "о", "л", "д", "ж", "э", "я", "ч", "с", "м", "и", "т", "ь", "б", "ю",
 	"Й", "Ц", "У", "К", "Е", "Н", "Г", "Ш", "Щ", "З", "Ч", "Ъ", "Ф", "Ы", "В",
@@ -20,12 +20,6 @@ pNode search(pNode node, Item key) {
 	if (key == node->key)
 		return node;
 	return (key < node->key) ? search(node->left, key) : search(node->right, key);
-}
-
-pNode getMax(pNode node) {
-	if (!node) return nullptr;
-	if (!node->right) return node;
-	return getMax(node->right);
 }
 
 int getSize(pNode node) {
@@ -60,28 +54,25 @@ pNode insert(pNode root, Item key) {
 }
 
 
-/* Given a binary search tree and a key, this function
-   deletes the key and returns the new root */
 pNode removeNode(pNode root, Item k){
-	// Base case
+	//Если был отправлен nullptr, то сразу возвращаем его.
 	if (!root)
 		return root;
 
-	// If the key to be deleted is smaller than the root's key,
-	// then it lies in the left subtree
+	//Если ключ меньше, чем ключ узла, то уходим в левого потомка.
 	if (k < root->key) {
 		root->left = removeNode(root->left, k);
 		return root;
 	}
-	// If the key to be deleted is greater than the root's key,
-	// then it lies in the right subtree
+	//Если ключ больше, чем ключ узла, то уходим в правого потомка.
 	else if (k > root->key) {
 		root->right = removeNode(root->right, k);
 		return root;
 	}
 
-	// If key is same as root's key, then this is the node to be deleted
-	// Node with only one child or no child
+	//Если нашли нужный ключ, то проверяем есть ли у него дети
+	//Если есть один ребёнок, то заменяем им удаляемый узел, 
+	//обновляем size и очищаем память заменённого узла.
 	if (!root->left) {
 		pNode temp = root->right;
 		delete root;
@@ -95,23 +86,28 @@ pNode removeNode(pNode root, Item k){
 		return temp;
 	}
 
-	// Node with two children: Get the inorder successor (smallest
-	// in the right subtree)
-	Node* succParent = root;
-	Node* succ = root->left;
-	while (succ->left != NULL) {
+	//Если потомка два, то необходимо найти элемент которым мы заменим удаляемый элемент.
+	//Находим максимальный элемент из левого поддерева и его родителя.
+	pNode succParent = root;
+	pNode succ = root->left;
+	while (succ->right) {
 		succParent = succ;
-		succ = succ->left;
+		succ = succ->right;
 	}
 
-	// Copy the inorder successor's content to this node
+	//Копируем данные из узла максимального потомка слева в удаляемый узел.
 	root->key = succ->key;
 	root->size = succ->size;
-	// Delete the inorder successor
+	
+	//Заменяем указатель родителя перемещённого потомка на nullptr.
 	if (succParent->left == succ)
-		succParent->left = succ->right;
+		succParent->left = nullptr;
 	else
-		succParent->right = succ->right;
+		succParent->right = nullptr;
+
+	//Освобождаем память исключённого узла и обновляем размер
+	//сначала для родителя максимального потомка, а потом и для
+	//узла, в котором произошло удаление.
 	delete succ;
 	fixsize(succParent);
 	fixsize(root);
@@ -144,7 +140,6 @@ pNode rotateLeft(pNode node) {
 	return buffer;
 }
 
-
 pNode insertRoot(pNode node,Item key) {
 	if (!node) return new Node(key);
 	if (key < node->key) {
@@ -164,23 +159,27 @@ int height(pNode node) {
 	return 1 + std::max(height(node->left), height(node->right));
 }
 
-pNode insertRand(pNode node, int key) {
+pNode insertRand(pNode node, Item key) {
 	if (!node) return new Node(key);
 	if (rand() % (node->size + 1) == 0) 
 		return insertRoot(node, key);
 	if (node->key > key)
-		node->left = insert(node->left, key);
+		node->left = insertRand(node->left, key);
 	else
-		node->right = insert(node->right, key);
+		node->right = insertRand(node->right, key);
 	fixsize(node);
 	return node;
 }
 
-void printTree(pNode node) {
+void _printTree(pNode node , int lvl) {
 	if (!node) return;
-	printTree(node->left);
-	std::cout << node->key << std::endl;
-	printTree(node->right);
+	_printTree(node->left, lvl + 1);
+	std::cout << "lvl:" << lvl << " - " << node->key << std::endl;
+	_printTree(node->right, lvl + 1);
+}
+
+void printTree(pNode node) {
+	_printTree(node,1);
 }
 
 const char* ALPHABETGLAS[] = { "У","у","Е","е","Ы","ы","А","а","О","о","Э","э","Я","я","И","и","Ю","ю","Ё","ё" };
@@ -243,11 +242,20 @@ int main(void) {
 
 	setlocale(LC_ALL, "russian");
 	srand(time(NULL));
-	const int step = 100;
-	std::cout << "---Orderer insert---" << std::endl;
+	const int step = 8;
+	pNode root = new Node(*"А");
+	for (int i = 1; i < step; i++) {
+		insert(root, *ALPHABET[rand() % 66]);
+	}
+
+	printTree(root);
+	std::cout << "Count vowel - " << countSogl(root);
+	/*std::cout << "---Orderer insert---" << std::endl;
 	checkHeight(insert,step);
 	std::cout << "---Random insert---" << std::endl;
-	checkHeight(insertRand, step);
+	checkHeight(insertRand, step);*/
+	
+	
 
 	return 0;
 }
