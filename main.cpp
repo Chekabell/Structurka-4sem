@@ -1,5 +1,7 @@
 ﻿#include <iostream>
 #include <vector>
+#include <random>
+#include <cmath>
 
 #define M1 64
 #define M2 67
@@ -16,8 +18,8 @@ struct Date {
 		month = m;
 		year = y;
 	}
-	int genKey() {
-		return month * year;
+	int _genKey() {
+		return year*25 + month;
 	}
 	Date& operator = (const Date& a){
 		month = a.month;
@@ -31,34 +33,77 @@ struct Date {
 };
 
 class HashTableDate {
+	friend void checkHashFunction(int, int);
+protected:
+	struct Node {
+		int key;
+		Date* date;
+		Node(int k, Date* d) {
+			key = k;
+			date = d;
+		}
+	};
 private:
-	Date* array;
+	std::vector<Node>* array;
 	int sizeHashTable;
+	int quantityElements;
 public:
 	HashTableDate(const int size) {
 		sizeHashTable = size;
-		array = new Date[size];
+		array = new std::vector<Node>[size];
+		quantityElements = 0;
 	}
-	int hashDate(const int key) {
-		return (int)(0.616161 * (float)key);
-	}
-	int getIndex(const int key) {
-		return hashDate(key) % sizeHashTable;
-	}
-	void add(int key, const struct Date* value){
-		array[getIndex(key)] = *value;
+	int add(struct Date* value) {
+		int key = value->_genKey();
+		array[_getIndex(key)].push_back(*(new Node(key, value)));
+		quantityElements++;
+		return key;
 	}
 	Date* operator [] (const int key) {
-		int index = getIndex(key);
-		return &array[index];
+		int index = _getIndex(key);
+		auto end =  array[index].end();
+		for (auto iter = array[index].begin(); iter != end; iter++) {
+			if (iter->key == key) return iter->date;
+		}
+		return nullptr;
 	};
+	void printAll() {
+		for (int index = 0; index < sizeHashTable; index++) {
+			if (array[index].empty()) continue;
+			int lenVect = array[index].size();
+			for (int i = 0; i < lenVect; i++) {
+				std::cout << array[index][i].date << "<-value : key->" << array[index][i].key << std::endl;
+			}
+		}
+	}
+	int getSize() {
+		return quantityElements;
+	}
+protected:
+	int _getIndex(const int key) {
+		double a;
+		return (int)((double)sizeHashTable * modf((252.0 * 0.6180339887 * (double)key), &a));
+	}
 };
+	
+void checkHashFunction(int sizeTable, int quanitityKeys) {
+	auto table = *new HashTableDate(sizeTable);
+	std::random_device rand_dev;
+	std::mt19937 generator(rand_dev());
+	std::uniform_int_distribution<int> distrMonth(1, 12);
+	std::uniform_int_distribution<int> distrYear(1972, 1992);
+	for (int i = 0; i < quanitityKeys; i++)
+		table.add(new Date(distrMonth(generator), distrYear(generator)));
+	double summ = 0;
+	for (int index = 0; index < sizeTable; index++) {
+		auto size = table.array[index].size();
+		std::cout << size << std::endl;
+		summ += std::pow((size - ((double)quanitityKeys / sizeTable)), 2);
+	}
+	double xi2 = (double)sizeTable / (double)quanitityKeys * summ;
+	std::cout << "xi2 = " << xi2 << std::endl;
+}
 
 int main(void) {
-	HashTableDate table = *new HashTableDate(M1);
-	Date* obj = new Date(5, 1975);
-	int key = obj->genKey();
-	table.add(key,obj);
-	std::cout << table[key] << std::endl;
-	return 0;
+	checkHashFunction(M2,200);
 }
