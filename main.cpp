@@ -105,5 +105,5 @@ void checkHashFunction(int sizeTable, int quanitityKeys) {
 }
 
 int main(void) {
-	checkHashFunction(M2,200);
+	checkHashFunction(M2,50);
 }
