@@ -92,14 +92,17 @@ void checkHashFunction(int sizeTable, int quanitityKeys) {
 	std::mt19937 generator(rand_dev());
 	std::uniform_int_distribution<int> distrMonth(1, 12);
 	std::uniform_int_distribution<int> distrYear(1972, 1992);
+
 	for (int i = 0; i < quanitityKeys; i++)
 		table.add(new Date(distrMonth(generator), distrYear(generator)));
+
 	double summ = 0;
 	for (int index = 0; index < sizeTable; index++) {
 		auto size = table.array[index].size();
 		std::cout << size << std::endl;
 		summ += std::pow((size - ((double)quanitityKeys / sizeTable)), 2);
 	}
+
 	double xi2 = (double)sizeTable / (double)quanitityKeys * summ;
 	std::cout << "xi2 = " << xi2 << std::endl;
 }
